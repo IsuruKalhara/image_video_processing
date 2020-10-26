@@ -5,7 +5,7 @@ close all
 clc
 
 % specify the threshold T
-T = 1e-1;
+T = 5e-1;
 
 %% read in the original, sharp and noise-free image
 original = im2double(rgb2gray((imread('original_cameraman.jpg'))));
@@ -25,6 +25,7 @@ noisy = imnoise(blurred, 'gaussian', 0, 1e-4);
 
 %% Restoration from blurred and noise-corrupted image
 % generate restoration filter in the frequency domain
+T = 0.5;
 inverse_freq = zeros(size(motion_freq));
 inverse_freq(abs(motion_freq) < T) = 0;
 inverse_freq(abs(motion_freq) >= T) = 1 ./ motion_freq(abs(motion_freq) >= T);
@@ -36,11 +37,13 @@ restored = ifft2(restored_freq);
 restored = restored(1 : H, 1 : W);
 restored(restored < 0) = 0;
 restored(restored > 1) = 1;
+imshow(restored)
 
 %% analysis of result
 noisy_psnr = 10 * log10(1 / (norm(original - noisy, 'fro') ^ 2 / H / W));
 restored_psnr = 10 * log10(1 / (norm(original - restored, 'fro') ^ 2 / H / W));
-
+%ISNR = 10 * log10 ( sum( (original(:) - noisy(:)).^2 ) / sum( abs(original(:) - restored(:)).^2 ) )
+isnr = 10*log10 ( sum (sum( (original-noisy).^2) ) / sum (sum((original-restored).^2) ) )
 
 %% visualization
 figure; imshow(original, 'border', 'tight');
